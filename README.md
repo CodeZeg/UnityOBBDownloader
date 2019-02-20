@@ -17,8 +17,46 @@ The C# API of the plugin is available in `IGooglePlayObbDownloader` interface. U
 
 For a script sample, please refer to `Assets/Scripts/DownloadObbExample.cs`.
 
-## How to Build
-Run `gradlew assemble` from src/UnityAndroidPermissions/
+## ChangeList
+### com.google.android.vending.licensing.LicenseChecker.checkAccess()
+    // reason
+    Android5.0上会抛出IllegalArgumentException
+
+    // from code
+    boolean bindResult = mContext
+        .bindService(
+                new Intent(new String(Base64.decode("Y29tLmFuZHJvaWQudmVuZGluZy5saWNlbnNpbmcuSUxpY2Vuc2luZ1NlcnZpY2U="))),
+                this, // ServiceConnection.
+                Context.BIND_AUTO_CREATE);
+
+    // to code
+    Intent serviceIntent = new Intent(new String(Base64.decode("Y29tLmFuZHJvaWQudmVuZGluZy5saWNlbnNpbmcuSUxpY2Vuc2luZ1NlcnZpY2U=")));
+    serviceIntent.setPackage("com.android.vending");
+
+### com.google.android.vending.expansion.downloader.DownloaderClientMarshaller.connect()
+    // reason
+    这里会导致绑定的服务在某些情况下无法启动，服务不启动，IDownloaderClient接口的onServiceConnected()方法就不会执行，mRemoteService为null，从而导致NullPointerException。虽然在使用mRemoteService前增加对其是否为null的判断可以避免crash，但是下载过程仍然无法监控，无法得到下载的结果。需要将这段代码替换成如下代码。也就是将BIND_DEBUG_UNBIND替换成BIND_AUTO_CREATE。
+
+    // from code
+    if ( !c.bindService(bindIntent, mConnection, Context.BIND_DEBUG_UNBIND) ) {
+        if ( Constants.LOGVV ) {
+            Log.d(Constants.TAG, "Service Unbound");
+        }
+    } else {
+        mBound = true;
+    }  
+
+    // to code
+    if ( !c.bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE) ) {
+        if ( Constants.LOGVV ) {
+            Log.d(Constants.TAG, "Service Unbound");
+        }
+    } else {
+        mBound = true;
+    }  
+
+## How to Build AAR
+excute build.bat
 
 ## License
 Copyright (C) 2016-2017 Yury Habets

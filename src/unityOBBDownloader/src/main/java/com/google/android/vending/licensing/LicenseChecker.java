@@ -20,6 +20,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -149,7 +151,10 @@ public class LicenseChecker implements ServiceConnection {
                 Log.i(TAG, "Binding to licensing service.");
                 try {
                     Intent serviceIntent = new Intent(new String(Base64.decode("Y29tLmFuZHJvaWQudmVuZGluZy5saWNlbnNpbmcuSUxpY2Vuc2luZ1NlcnZpY2U=")));
-                    serviceIntent.setPackage("com.android.vending");
+                    ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(serviceIntent, 0);
+                    ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+                    ComponentName componentName = new ComponentName(serviceInfo.packageName, serviceInfo.name);
+                    serviceIntent.setComponent(componentName);
                     boolean bindResult = mContext
                             .bindService(
                                     serviceIntent,

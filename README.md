@@ -33,6 +33,13 @@ For a script sample, please refer to `Assets/Scripts/DownloadObbExample.cs`.
     Intent serviceIntent = new Intent(new String(Base64.decode("Y29tLmFuZHJvaWQudmVuZGluZy5saWNlbnNpbmcuSUxpY2Vuc2luZ1NlcnZpY2U=")));
     serviceIntent.setPackage("com.android.vending");
 
+    // 魅族手机绑定服务失败 再次修改为
+    Intent serviceIntent = new Intent(new String(Base64.decode("Y29tLmFuZHJvaWQudmVuZGluZy5saWNlbnNpbmcuSUxpY2Vuc2luZ1NlcnZpY2U=")));
+    ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(serviceIntent, 0);
+    ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+    ComponentName componentName = new ComponentName(serviceInfo.packageName, serviceInfo.name);
+    serviceIntent.setComponent(componentName);
+
 ### com.google.android.vending.expansion.downloader.DownloaderClientMarshaller.connect()
     // reason
     这里会导致绑定的服务在某些情况下无法启动，服务不启动，IDownloaderClient接口的onServiceConnected()方法就不会执行，mRemoteService为null，从而导致NullPointerException。虽然在使用mRemoteService前增加对其是否为null的判断可以避免crash，但是下载过程仍然无法监控，无法得到下载的结果。需要将这段代码替换成如下代码。也就是将BIND_DEBUG_UNBIND替换成BIND_AUTO_CREATE。
